@@ -11,28 +11,6 @@ type CustomerRouter struct {
 	repositoryAPI RepositoryAPI
 }
 
-// RegisterService s
-type RegisterService struct {
-	Router      *gin.Engine
-	customerAPI CustomerAPI
-}
-
-// NewRegisterAPI f
-func NewRegisterService(router *gin.Engine, customerAPI CustomerAPI) RegisterAPI {
-
-	service := RegisterService{router, customerAPI}
-	return service
-
-}
-
-// Register f
-func (rs RegisterService) Register() error {
-	rs.Router.POST("/customers", rs.customerAPI.CreateCustomer)
-	rs.Router.GET("/customers", rs.customerAPI.GetCustomers)
-	rs.Router.GET("/customers/:id", rs.customerAPI.GetCustomer)
-
-	return nil
-}
 
 // NewCustomerRouter f
 func NewCustomerRouter(repositoryAPI RepositoryAPI) CustomerAPI {
@@ -77,28 +55,3 @@ func (cr *CustomerRouter) GetCustomers(ctx *gin.Context) {
 	}
 }
 
-// NewServer f
-func NewServer(router *gin.Engine, registerAPI RegisterAPI, configAPI ConfigAPI) ServerAPI {
-
-	return &Server{router, registerAPI, configAPI}
-}
-
-// Server s
-type Server struct {
-	Router      *gin.Engine
-	registerAPI RegisterAPI
-	configAPI   ConfigAPI
-}
-
-// Run f
-func (s *Server) Run() error {
-	if err := s.configAPI.Load(); err != nil {
-		return err
-	}
-
-	if err := s.registerAPI.Register(); err != nil {
-		return err
-	}
-
-	return s.Router.Run()
-}
