@@ -15,7 +15,8 @@ func InitialiseServerAPI() ServerAPI {
 	engine := gin.Default()
 	repositoryAPI := NewMongoService()
 	customerAPI := NewCustomerRouter(repositoryAPI)
-	registerAPI := NewRegisterService(engine, customerAPI)
+	customerSearchAPI := NewCustomerSearchRouter(repositoryAPI)
+	registerAPI := NewRegisterService(engine, customerAPI, customerSearchAPI)
 	configAPI := NewConfigService()
 	serverAPI := NewServer(engine, registerAPI, configAPI)
 	return serverAPI

@@ -13,6 +13,7 @@ func InitialiseServerAPI() ServerAPI {
 		gin.Default,
 		NewMongoService,
 		NewCustomerRouter,
+		NewCustomerSearchRouter,
 		NewRegisterService,
 		NewConfigService,
 		NewServer,

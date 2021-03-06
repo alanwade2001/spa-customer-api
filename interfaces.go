@@ -9,6 +9,11 @@ type CustomerAPI interface {
 	GetCustomers(*gin.Context)
 }
 
+// CustomerSearchAPI i
+type CustomerSearchAPI interface {
+	FindCustomerByEmail(*gin.Context)
+}
+
 // ServerAPI i
 type ServerAPI interface {
 	Run() error
@@ -24,6 +29,8 @@ type RepositoryAPI interface {
 	CreateCustomer(c *Customer) (*Customer, error)
 	GetCustomer(id string) (*Customer, error)
 	GetCustomers() (*Customers, error)
+
+	FindCustomerByEmail(id string) (*Customer, error)
 }
 
 // ConfigAPI si

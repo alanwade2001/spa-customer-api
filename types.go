@@ -5,7 +5,7 @@ type Customer struct {
 	ID                string `bson:"_id"`
 	Name              string
 	InitiatingPartyID string
-	Roles             Roles
+	Users             Users
 }
 
 // Customers a

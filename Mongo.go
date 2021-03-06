@@ -140,3 +140,24 @@ func (ms MongoService) GetCustomers() (*Customers, error) {
 
 	return &customers, nil
 }
+
+// FindCustomerByEmail f
+func (ms MongoService) FindCustomerByEmail(email string) (*Customer, error) {
+	connection := ms.connect()
+	defer connection.Disconnect()
+
+	customer := new(Customer)
+	filter := bson.M{"users.email": email}
+
+	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	klog.Infof("customer:[%+v]", customer)
+
+	return customer, nil
+}
