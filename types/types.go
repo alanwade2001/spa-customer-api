@@ -1,4 +1,4 @@
-package main
+package types
 
 // Customer s
 type Customer struct {

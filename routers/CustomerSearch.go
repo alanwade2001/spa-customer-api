@@ -1,18 +1,19 @@
-package main
+package routers
 
 import (
 	"net/http"
 
+	"github.com/alanwade2001/spa-customer-api/types"
 	"github.com/gin-gonic/gin"
 )
 
 // CustomerSearchRouter s
 type CustomerSearchRouter struct {
-	repositoryAPI RepositoryAPI
+	repositoryAPI types.RepositoryAPI
 }
 
 // NewCustomerSearchRouter f
-func NewCustomerSearchRouter(repositoryAPI RepositoryAPI) CustomerSearchAPI {
+func NewCustomerSearchRouter(repositoryAPI types.RepositoryAPI) types.CustomerSearchAPI {
 	return CustomerSearchRouter{
 		repositoryAPI: repositoryAPI,
 	}

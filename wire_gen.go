@@ -6,18 +6,23 @@
 package main
 
 import (
+	"github.com/alanwade2001/spa-customer-api/repositories"
+	"github.com/alanwade2001/spa-customer-api/routers"
+	"github.com/alanwade2001/spa-customer-api/services"
+	"github.com/alanwade2001/spa-customer-api/types"
 	"github.com/gin-gonic/gin"
 )
 
 // Injectors from wire.go:
 
-func InitialiseServerAPI() ServerAPI {
+func InitialiseServerAPI() types.ServerAPI {
 	engine := gin.Default()
-	repositoryAPI := NewMongoService()
-	customerAPI := NewCustomerRouter(repositoryAPI)
-	customerSearchAPI := NewCustomerSearchRouter(repositoryAPI)
-	registerAPI := NewRegisterService(engine, customerAPI, customerSearchAPI)
-	configAPI := NewConfigService()
+	serviceAPI := services.NewService()
+	customerAPI := routers.NewCustomerRouter(serviceAPI)
+	repositoryAPI := repositories.NewMongoService()
+	customerSearchAPI := routers.NewCustomerSearchRouter(repositoryAPI)
+	registerAPI := routers.NewRegisterService(engine, customerAPI, customerSearchAPI)
+	configAPI := services.NewConfigService()
 	serverAPI := NewServer(engine, registerAPI, configAPI)
 	return serverAPI
 }

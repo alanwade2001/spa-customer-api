@@ -1,16 +1,19 @@
-package main
+package routers
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/alanwade2001/spa-customer-api/types"
+	"github.com/gin-gonic/gin"
+)
 
 // RegisterService s
 type RegisterService struct {
 	Router            *gin.Engine
-	customerAPI       CustomerAPI
-	customerSearchAPI CustomerSearchAPI
+	customerAPI       types.CustomerAPI
+	customerSearchAPI types.CustomerSearchAPI
 }
 
 // NewRegisterService f
-func NewRegisterService(router *gin.Engine, customerAPI CustomerAPI, customerSearchAPI CustomerSearchAPI) RegisterAPI {
+func NewRegisterService(router *gin.Engine, customerAPI types.CustomerAPI, customerSearchAPI types.CustomerSearchAPI) types.RegisterAPI {
 
 	service := RegisterService{router, customerAPI, customerSearchAPI}
 	return service

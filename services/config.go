@@ -1,6 +1,9 @@
-package main
+package services
 
-import "github.com/spf13/viper"
+import (
+	"github.com/alanwade2001/spa-customer-api/types"
+	"github.com/spf13/viper"
+)
 
 // ConfigService s
 type ConfigService struct {
@@ -24,6 +27,6 @@ func (cs ConfigService) Load() error {
 }
 
 // NewConfigService f
-func NewConfigService() ConfigAPI {
+func NewConfigService() types.ConfigAPI {
 	return &ConfigService{}
 }

@@ -1,9 +1,12 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/alanwade2001/spa-customer-api/types"
+	"github.com/gin-gonic/gin"
+)
 
 // NewServer f
-func NewServer(router *gin.Engine, registerAPI RegisterAPI, configAPI ConfigAPI) ServerAPI {
+func NewServer(router *gin.Engine, registerAPI types.RegisterAPI, configAPI types.ConfigAPI) types.ServerAPI {
 
 	return &Server{router, registerAPI, configAPI}
 }
@@ -11,8 +14,8 @@ func NewServer(router *gin.Engine, registerAPI RegisterAPI, configAPI ConfigAPI)
 // Server s
 type Server struct {
 	Router      *gin.Engine
-	registerAPI RegisterAPI
-	configAPI   ConfigAPI
+	registerAPI types.RegisterAPI
+	configAPI   types.ConfigAPI
 }
 
 // Run f

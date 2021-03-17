@@ -1,34 +1,34 @@
-package main
+package routers
 
 import (
 	"net/http"
 
+	"github.com/alanwade2001/spa-customer-api/types"
 	"github.com/gin-gonic/gin"
 )
 
 // CustomerRouter s
 type CustomerRouter struct {
-	repositoryAPI RepositoryAPI
+	serviceAPI types.ServiceAPI
 }
 
-
 // NewCustomerRouter f
-func NewCustomerRouter(repositoryAPI RepositoryAPI) CustomerAPI {
+func NewCustomerRouter(serviceAPI types.ServiceAPI) types.CustomerAPI {
 
-	customerAPI := CustomerRouter{repositoryAPI}
+	customerAPI := CustomerRouter{serviceAPI}
 
 	return &customerAPI
 }
 
 // CreateCustomer f
 func (cr *CustomerRouter) CreateCustomer(ctx *gin.Context) {
-	customer := new(Customer)
+	customer := new(types.Customer)
 
 	if err := ctx.BindJSON(customer); err != nil {
 
 		ctx.IndentedJSON(http.StatusUnprocessableEntity, err)
 
-	} else if c1, err := cr.repositoryAPI.CreateCustomer(customer); err != nil {
+	} else if c1, err := cr.serviceAPI.CreateCustomer(customer); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 	} else {
 		ctx.IndentedJSON(http.StatusCreated, c1)
@@ -39,7 +39,7 @@ func (cr *CustomerRouter) CreateCustomer(ctx *gin.Context) {
 // GetCustomer f
 func (cr *CustomerRouter) GetCustomer(ctx *gin.Context) {
 	customerID := ctx.Param("id")
-	if customer, err := cr.repositoryAPI.GetCustomer(customerID); err != nil {
+	if customer, err := cr.serviceAPI.GetCustomer(customerID); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 	} else {
 		ctx.IndentedJSON(http.StatusOK, customer)
@@ -48,10 +48,9 @@ func (cr *CustomerRouter) GetCustomer(ctx *gin.Context) {
 
 // GetCustomers f
 func (cr *CustomerRouter) GetCustomers(ctx *gin.Context) {
-	if customers, err := cr.repositoryAPI.GetCustomers(); err != nil {
+	if customers, err := cr.serviceAPI.GetCustomers(); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 	} else {
 		ctx.IndentedJSON(http.StatusOK, customers)
 	}
 }
-

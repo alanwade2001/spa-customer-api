@@ -1,18 +1,23 @@
-package main
+package repositories
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"k8s.io/klog/v2"
+
+	"github.com/alanwade2001/spa-customer-api/models/generated"
+	"github.com/alanwade2001/spa-customer-api/types"
 )
 
 // MongoService s
@@ -20,7 +25,7 @@ type MongoService struct {
 }
 
 // NewMongoService s
-func NewMongoService() RepositoryAPI {
+func NewMongoService() types.RepositoryAPI {
 	return &MongoService{}
 }
 
@@ -47,7 +52,10 @@ func (ms MongoService) connect() MongoConnection {
 
 	connectionURI := fmt.Sprintf(uriTemplate, username, password)
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI))
+	structcodec, _ := bsoncodec.NewStructCodec(bsoncodec.JSONFallbackStructTagParser)
+	reg := bson.NewRegistryBuilder().RegisterEncoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).Build()
+
+	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI).SetRegistry(reg))
 	if err != nil {
 		klog.Warningf("Failed to create client: %v", err)
 	}
@@ -77,11 +85,11 @@ func (ms MongoService) getCollection(connection MongoConnection) *mongo.Collecti
 }
 
 // CreateCustomer f
-func (ms MongoService) CreateCustomer(customer *Customer) (*Customer, error) {
+func (ms MongoService) CreateCustomer(customer *generated.CustomerModel) (*generated.CustomerModel, error) {
 	connection := ms.connect()
 	defer connection.Disconnect()
 
-	customer.ID = primitive.NewObjectID().Hex()
+	customer.Id = primitive.NewObjectID().Hex()
 
 	result, err := ms.getCollection(connection).InsertOne(connection.ctx, customer)
 
@@ -91,16 +99,17 @@ func (ms MongoService) CreateCustomer(customer *Customer) (*Customer, error) {
 	}
 
 	klog.Infof("result:[%+v]", result)
+	klog.Infof("cus:[%+v]", customer)
 
 	return customer, nil
 }
 
 // GetCustomer f
-func (ms MongoService) GetCustomer(ID string) (*Customer, error) {
+func (ms MongoService) GetCustomer(ID string) (*generated.CustomerModel, error) {
 	connection := ms.connect()
 	defer connection.Disconnect()
 
-	customer := new(Customer)
+	customer := new(generated.CustomerModel)
 	filter := bson.M{"_id": ID}
 
 	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
@@ -117,13 +126,13 @@ func (ms MongoService) GetCustomer(ID string) (*Customer, error) {
 }
 
 // GetCustomers f
-func (ms MongoService) GetCustomers() (*Customers, error) {
+func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
 	connection := ms.connect()
 	defer connection.Disconnect()
 
 	var cursor *mongo.Cursor
 	var err error
-	var customers Customers
+	var customers []generated.CustomerModel
 
 	filter := bson.M{}
 	if cursor, err = ms.getCollection(connection).Find(connection.ctx, filter); err != nil {
@@ -142,11 +151,11 @@ func (ms MongoService) GetCustomers() (*Customers, error) {
 }
 
 // FindCustomerByEmail f
-func (ms MongoService) FindCustomerByEmail(email string) (*Customer, error) {
+func (ms MongoService) FindCustomerByEmail(email string) (*generated.CustomerModel, error) {
 	connection := ms.connect()
 	defer connection.Disconnect()
 
-	customer := new(Customer)
+	customer := new(generated.CustomerModel)
 	filter := bson.M{"users.email": email}
 
 	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
