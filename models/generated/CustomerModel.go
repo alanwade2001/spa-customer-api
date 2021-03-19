@@ -22,7 +22,7 @@ type CustomerModel struct {
   Active bool `json:"Active"`
 
   // unique identifier
-  Id string `json:"_id"`
+  Id string `json:"_id,omitempty"`
 
   // the initiating parties acting on behalf of customer
   InitiatingParties []*InitiatingParty `json:"InitiatingParties,omitempty"`
@@ -61,8 +61,6 @@ func (strct *CustomerModel) MarshalJSON() ([]byte, error) {
  		buf.Write(tmp)
 	}
 	comma = true
-    // "Id" field is required
-    // only required object types supported for marshal checking (for now)
     // Marshal the "_id" field
     if comma { 
         buf.WriteString(",") 
@@ -117,7 +115,6 @@ func (strct *CustomerModel) MarshalJSON() ([]byte, error) {
 
 func (strct *CustomerModel) UnmarshalJSON(b []byte) error {
     ActiveReceived := false
-    _idReceived := false
     NameReceived := false
     var jsonMap map[string]json.RawMessage
     if err := json.Unmarshal(b, &jsonMap); err != nil {
@@ -135,7 +132,6 @@ func (strct *CustomerModel) UnmarshalJSON(b []byte) error {
             if err := json.Unmarshal([]byte(v), &strct.Id); err != nil {
                 return err
              }
-            _idReceived = true
         case "InitiatingParties":
             if err := json.Unmarshal([]byte(v), &strct.InitiatingParties); err != nil {
                 return err
@@ -154,10 +150,6 @@ func (strct *CustomerModel) UnmarshalJSON(b []byte) error {
     // check if Active (a required property) was received
     if !ActiveReceived {
         return errors.New("\"Active\" is required but was not present")
-    }
-    // check if _id (a required property) was received
-    if !_idReceived {
-        return errors.New("\"_id\" is required but was not present")
     }
     // check if Name (a required property) was received
     if !NameReceived {

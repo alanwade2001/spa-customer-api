@@ -12,7 +12,7 @@ import (
 func TestMongoService_CreateCustomer(t *testing.T) {
 
 	ms := NewMongoService()
-	services.NewConfigService().Load()
+	services.NewConfigService().Load("..")
 
 	type args struct {
 		customer *generated.CustomerModel

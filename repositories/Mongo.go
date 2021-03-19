@@ -114,13 +114,15 @@ func (ms MongoService) GetCustomer(ID string) (*generated.CustomerModel, error) 
 
 	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
+			klog.InfoS("Customer not found:", "ID", ID)
 			return nil, nil
 		}
 
+		klog.Warningf("Error calling - FindOne: %v", err)
 		return nil, err
 	}
 
-	klog.Infof("customer:[%+v]", customer)
+	klog.Infof("found customer:[%+v]", customer)
 
 	return customer, nil
 }
@@ -137,9 +139,11 @@ func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
 	filter := bson.M{}
 	if cursor, err = ms.getCollection(connection).Find(connection.ctx, filter); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
+			klog.InfoS("No customers found")
 			return &customers, nil
 		}
 
+		klog.Warningf("Error calling - Find : %v", err)
 		return nil, err
 	}
 
@@ -156,17 +160,19 @@ func (ms MongoService) FindCustomerByEmail(email string) (*generated.CustomerMod
 	defer connection.Disconnect()
 
 	customer := new(generated.CustomerModel)
-	filter := bson.M{"users.email": email}
+	filter := bson.M{"Users.email": email}
 
 	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
+			klog.InfoS("Customer with email not found:", "Email", email)
 			return nil, nil
 		}
 
+		klog.Warningf("Error calling - FindOne with filter : %v", err)
 		return nil, err
 	}
 
-	klog.Infof("customer:[%+v]", customer)
+	klog.InfoS("customer:[%+v]", customer)
 
 	return customer, nil
 }

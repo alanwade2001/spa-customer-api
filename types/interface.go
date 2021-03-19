@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/alanwade2001/spa-customer-api/models/generated"
+	models "github.com/alanwade2001/spa-customer-api/models/generated"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,22 +29,22 @@ type RegisterAPI interface {
 
 // RepositoryAPI i
 type RepositoryAPI interface {
-	CreateCustomer(c *generated.CustomerModel) (*generated.CustomerModel, error)
-	GetCustomer(id string) (*generated.CustomerModel, error)
-	GetCustomers() (*[]generated.CustomerModel, error)
+	CreateCustomer(c *models.CustomerModel) (*models.CustomerModel, error)
+	GetCustomer(id string) (*models.CustomerModel, error)
+	GetCustomers() (*[]models.CustomerModel, error)
 
-	FindCustomerByEmail(id string) (*generated.CustomerModel, error)
+	FindCustomerByEmail(id string) (*models.CustomerModel, error)
 }
 
 // ConfigAPI si
 type ConfigAPI interface {
-	Load() error
+	Load(configPath string) error
 }
 
 type ServiceAPI interface {
-	CreateCustomer(c *Customer) (*Customer, error)
-	GetCustomer(id string) (*Customer, error)
-	GetCustomers() (*Customers, error)
+	CreateCustomer(c *models.CustomerModel) (*models.CustomerModel, error)
+	GetCustomer(id string) (*models.CustomerModel, error)
+	GetCustomers() (*[]models.CustomerModel, error)
 
-	FindCustomerByEmail(id string) (*Customer, error)
+	FindCustomerByEmail(id string) (*models.CustomerModel, error)
 }

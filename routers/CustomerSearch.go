@@ -24,6 +24,8 @@ func (cs CustomerSearchRouter) FindCustomerByEmail(ctx *gin.Context) {
 	email := ctx.Param("email")
 	if customer, err := cs.repositoryAPI.FindCustomerByEmail(email); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
+	} else if customer == nil {
+		ctx.Status(http.StatusNotFound)
 	} else {
 		ctx.IndentedJSON(http.StatusOK, customer)
 	}

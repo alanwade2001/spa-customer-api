@@ -20,7 +20,7 @@ type Server struct {
 
 // Run f
 func (s *Server) Run() error {
-	if err := s.configAPI.Load(); err != nil {
+	if err := s.configAPI.Load("."); err != nil {
 		return err
 	}
 
