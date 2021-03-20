@@ -84,7 +84,7 @@ func (ms MongoRepository) GetCustomer(ID string) (*generated.CustomerModel, erro
 	customer := new(generated.CustomerModel)
 	filter := bson.M{"_id": ID}
 
-	if err := ms.service.GetCollection(connection).FindOne(connection.Ctx, filter).Decode(customer); err != nil {
+	if err := ms.GetService().GetCollection(connection).FindOne(connection.Ctx, filter).Decode(customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			klog.InfoS("Customer not found:", "ID", ID)
 			return nil, nil
@@ -109,7 +109,7 @@ func (ms MongoRepository) GetCustomers() (*[]generated.CustomerModel, error) {
 	customers := []generated.CustomerModel{}
 
 	filter := bson.M{}
-	if cursor, err = ms.service.GetCollection(connection).Find(connection.Ctx, filter); err != nil {
+	if cursor, err = ms.GetService().GetCollection(connection).Find(connection.Ctx, filter); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			klog.InfoS("No customers found")
 			return &customers, nil
@@ -134,7 +134,7 @@ func (ms MongoRepository) FindCustomerByEmail(email string) (*generated.Customer
 	customer := new(generated.CustomerModel)
 	filter := bson.M{"Users.email": email}
 
-	if err := ms.service.GetCollection(connection).FindOne(connection.Ctx, filter).Decode(customer); err != nil {
+	if err := ms.GetService().GetCollection(connection).FindOne(connection.Ctx, filter).Decode(customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			klog.InfoS("Customer with email not found:", "Email", email)
 			return nil, nil
