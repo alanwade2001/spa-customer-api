@@ -53,7 +53,9 @@ func (ms MongoService) connect() MongoConnection {
 	connectionURI := fmt.Sprintf(uriTemplate, username, password)
 
 	structcodec, _ := bsoncodec.NewStructCodec(bsoncodec.JSONFallbackStructTagParser)
-	reg := bson.NewRegistryBuilder().RegisterEncoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).Build()
+	reg := bson.NewRegistryBuilder().
+		RegisterTypeEncoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).
+		RegisterTypeDecoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).Build()
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI).SetRegistry(reg))
 	if err != nil {
@@ -134,7 +136,7 @@ func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
 
 	var cursor *mongo.Cursor
 	var err error
-	var customers []generated.CustomerModel
+	customers := []generated.CustomerModel{}
 
 	filter := bson.M{}
 	if cursor, err = ms.getCollection(connection).Find(connection.ctx, filter); err != nil {
