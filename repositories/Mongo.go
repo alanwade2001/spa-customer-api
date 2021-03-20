@@ -1,9 +1,7 @@
 package repositories
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -12,88 +10,60 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"k8s.io/klog/v2"
 
 	"github.com/alanwade2001/spa-customer-api/models/generated"
 	"github.com/alanwade2001/spa-customer-api/types"
+
+	mgo "github.com/alanwade2001/spa-common/mongo"
 )
 
-// MongoService s
-type MongoService struct {
+// MongoRepository s
+type MongoRepository struct {
+	service *mgo.MongoService
 }
 
 // NewMongoService s
 func NewMongoService() types.RepositoryAPI {
-	return &MongoService{}
+
+	return &MongoRepository{}
 }
 
-// MongoConnection s
-type MongoConnection struct {
-	client *mongo.Client
-	ctx    context.Context
-	cancel context.CancelFunc
-}
+func (ms *MongoRepository) GetService() *mgo.MongoService {
 
-// Disconnect f
-func (mc *MongoConnection) Disconnect() {
-	mc.cancel()
-	mc.client.Disconnect(mc.ctx)
-}
+	if ms.service != nil {
+		return ms.service
+	}
 
-// Connect f
-func (ms MongoService) connect() MongoConnection {
-	username := viper.GetString("MONGODB_USER")
-	klog.Infof("mongo user: [%s]", username)
-	password := viper.GetString("MONGODB_PASSWORD")
 	uriTemplate := viper.GetString("MONGODB_URI_TEMPLATE")
-	klog.Infof("uriTemplate: [%s]", uriTemplate)
-
-	connectionURI := fmt.Sprintf(uriTemplate, username, password)
+	username := viper.GetString("MONGODB_USER")
+	password := viper.GetString("MONGODB_PASSWORD")
+	connectTimeout := viper.GetDuration("MONGODB_TIMEOUT") * time.Second
+	database := viper.GetString("MONGODB_DATABASE")
+	collection := viper.GetString("MONGODB_COLLECTION")
 
 	structcodec, _ := bsoncodec.NewStructCodec(bsoncodec.JSONFallbackStructTagParser)
 	reg := bson.NewRegistryBuilder().
 		RegisterTypeEncoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).
-		RegisterTypeDecoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).Build()
+		RegisterTypeDecoder(reflect.TypeOf(generated.CustomerModel{}), structcodec).
+		Build()
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(connectionURI).SetRegistry(reg))
-	if err != nil {
-		klog.Warningf("Failed to create client: %v", err)
-	}
+	service := mgo.NewMongoService(uriTemplate, username, password, database, collection, connectTimeout, reg)
 
-	connectTimeout := viper.GetDuration("MONGODB_TIMEOUT") * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), connectTimeout)
+	ms.service = service
 
-	err = client.Connect(ctx)
-	if err != nil {
-		klog.Warningf("Failed to connect to cluster: %v", err)
-	}
-
-	// Force a connection to verify our connection string
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		klog.Warningf("Failed to ping cluster: %v", err)
-	}
-
-	klog.Infof("Connected to MongoDB!")
-
-	return MongoConnection{client, ctx, cancel}
-}
-
-func (ms MongoService) getCollection(connection MongoConnection) *mongo.Collection {
-	database := viper.GetString("MONGODB_DATABASE")
-	return connection.client.Database(database).Collection("Customers")
+	return ms.service
 }
 
 // CreateCustomer f
-func (ms MongoService) CreateCustomer(customer *generated.CustomerModel) (*generated.CustomerModel, error) {
-	connection := ms.connect()
+func (ms MongoRepository) CreateCustomer(customer *generated.CustomerModel) (*generated.CustomerModel, error) {
+	connection := ms.GetService().Connect()
 	defer connection.Disconnect()
 
 	customer.Id = primitive.NewObjectID().Hex()
 
-	result, err := ms.getCollection(connection).InsertOne(connection.ctx, customer)
+	result, err := ms.GetService().GetCollection(connection).InsertOne(connection.Ctx, customer)
 
 	if err != nil {
 		klog.Warningf("Could not create Customer: %v", err)
@@ -107,14 +77,14 @@ func (ms MongoService) CreateCustomer(customer *generated.CustomerModel) (*gener
 }
 
 // GetCustomer f
-func (ms MongoService) GetCustomer(ID string) (*generated.CustomerModel, error) {
-	connection := ms.connect()
+func (ms MongoRepository) GetCustomer(ID string) (*generated.CustomerModel, error) {
+	connection := ms.GetService().Connect()
 	defer connection.Disconnect()
 
 	customer := new(generated.CustomerModel)
 	filter := bson.M{"_id": ID}
 
-	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
+	if err := ms.service.GetCollection(connection).FindOne(connection.Ctx, filter).Decode(customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			klog.InfoS("Customer not found:", "ID", ID)
 			return nil, nil
@@ -130,8 +100,8 @@ func (ms MongoService) GetCustomer(ID string) (*generated.CustomerModel, error) 
 }
 
 // GetCustomers f
-func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
-	connection := ms.connect()
+func (ms MongoRepository) GetCustomers() (*[]generated.CustomerModel, error) {
+	connection := ms.GetService().Connect()
 	defer connection.Disconnect()
 
 	var cursor *mongo.Cursor
@@ -139,7 +109,7 @@ func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
 	customers := []generated.CustomerModel{}
 
 	filter := bson.M{}
-	if cursor, err = ms.getCollection(connection).Find(connection.ctx, filter); err != nil {
+	if cursor, err = ms.service.GetCollection(connection).Find(connection.Ctx, filter); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			klog.InfoS("No customers found")
 			return &customers, nil
@@ -149,7 +119,7 @@ func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
 		return nil, err
 	}
 
-	if err = cursor.All(connection.ctx, &customers); err != nil {
+	if err = cursor.All(connection.Ctx, &customers); err != nil {
 		return nil, err
 	}
 
@@ -157,14 +127,14 @@ func (ms MongoService) GetCustomers() (*[]generated.CustomerModel, error) {
 }
 
 // FindCustomerByEmail f
-func (ms MongoService) FindCustomerByEmail(email string) (*generated.CustomerModel, error) {
-	connection := ms.connect()
+func (ms MongoRepository) FindCustomerByEmail(email string) (*generated.CustomerModel, error) {
+	connection := ms.GetService().Connect()
 	defer connection.Disconnect()
 
 	customer := new(generated.CustomerModel)
 	filter := bson.M{"Users.email": email}
 
-	if err := ms.getCollection(connection).FindOne(connection.ctx, filter).Decode(customer); err != nil {
+	if err := ms.service.GetCollection(connection).FindOne(connection.Ctx, filter).Decode(customer); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			klog.InfoS("Customer with email not found:", "Email", email)
 			return nil, nil

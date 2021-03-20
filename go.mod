@@ -3,6 +3,7 @@ module github.com/alanwade2001/spa-customer-api
 go 1.16
 
 require (
+	github.com/alanwade2001/spa-common v1.1.2 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/wire v0.5.0
 	github.com/spf13/viper v1.7.1

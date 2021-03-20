@@ -11,22 +11,22 @@ import (
 
 func TestMongoService_CreateCustomer(t *testing.T) {
 
-	ms := NewMongoService()
 	services.NewConfigService().Load("..")
+	ms := NewMongoService()
 
 	type args struct {
 		customer *generated.CustomerModel
 	}
 	tests := []struct {
 		name    string
-		ms      MongoService
+		ms      MongoRepository
 		args    args
 		want    *generated.CustomerModel
 		wantErr bool
 	}{
 		{
 			name: "test001",
-			ms:   *ms.(*MongoService),
+			ms:   *ms.(*MongoRepository),
 			args: args{
 				customer: &generated.CustomerModel{
 					Active: true,
@@ -82,7 +82,7 @@ func TestMongoService_CreateCustomer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ms := MongoService{}
+			ms := MongoRepository{}
 			got, err := ms.CreateCustomer(tt.args.customer)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("MongoService.CreateCustomer() error = %v, wantErr %v", err, tt.wantErr)
