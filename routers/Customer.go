@@ -7,6 +7,7 @@ import (
 	"github.com/alanwade2001/spa-customer-api/models/generated"
 	"github.com/alanwade2001/spa-customer-api/types"
 	"github.com/gin-gonic/gin"
+	"k8s.io/klog/v2"
 )
 
 // CustomerRouter s
@@ -56,6 +57,7 @@ func (cr *CustomerRouter) CreateCustomer(ctx *gin.Context) {
 // GetCustomer f
 func (cr *CustomerRouter) GetCustomer(ctx *gin.Context) {
 	customerID := ctx.Param("id")
+	klog.InfoS("GetCustomer", "id", customerID)
 	if customer, err := cr.serviceAPI.GetCustomer(customerID); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 	} else if customer == nil {
